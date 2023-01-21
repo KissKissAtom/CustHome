@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="fr">
+	<head>
+		<title>Custhome</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="./css/main.css">
+	</head>
+
+	<body>
+		<div id="menu">
+			
+			<!--<img class="barre_menu" class="col-xs-12 col-sm-12 col-lg-12" src="../../images/barre_menu.png" alt="barre menu">-->
+				
+			<button><img id="instructions" class="deplacement" class="col-xs-12 col-sm-12 col-lg-12" src="images/instructions.png" alt="instructions"></button>
+			
+			<!--<button><img id="rt" class="rotation" class="col-xs-12 col-sm-12 col-lg-12" src="images/btn_rotate.png" alt="rotation"></button>
+			<br/>
+			<img class="libre" class="col-xs-12 col-sm-12 col-lg-12" src="images/btn_libre.png" alt="libre">-->
+				
+			
+			
+			
+		</div>
+
+
+
+<!--SCRIPT THREE.JS-->
+
+		<script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
+
+
+
+
+<!--Import des Modules-->
+
+
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "./build/three.module.js"
+				}
+			}
+		</script>
+
+
+
+
+		<script type="module">
+
+			import * as THREE from 'three';
+
+			import { OrbitControls } from './javascript/OrbitControls.js';
+			import { GLTFLoader } from './javascript/GLTFLoader.js';
+			import { RGBELoader } from './javascript/RGBELoader.js';
+			import { DragControls } from './javascript/DragControls.js';
+
+			var camera, scene, renderer;
+
+var objects = [];
+let INTERSECTED;
+let drag = false;
+let rotate = false;
+init();
+animate();
+
+function init() {
+//Réglages caméra
+	camera = new THREE.PerspectiveCamera( 25, window.innerWidth / window.innerHeight, 1, 5000 );
+				
+				camera.position.x = 10;
+				camera.position.y = 10;
+				camera.position.z = 10;
+				camera.rotation.x = -0.7;
+				camera.rotation.y = 0.6;
+				camera.rotation.z = 0.5;
+				scene = new THREE.Scene();
+
+    scene = new THREE.Scene();
+
+//Import de l'HDR
+	new RGBELoader()
+					.setPath( './hdr/' )
+					.load( 'royal_esplanade_1k.hdr', function ( texture ) {
+
+						texture.mapping = THREE.EquirectangularReflectionMapping;
+
+						scene.background = texture;
+						scene.environment = texture;
+
+						
+
+						// Import Scene
+
+						const loader = new GLTFLoader().setPath( './models/' );
+						loader.load( 'SceneFinal.gltf', function ( gltf ) {
+							gltf.scene.position.y = -0.9;
+						
+
+							scene.add( gltf.scene );
+							
+							
+						});
+						//BUREAU
+						const loader2 = new GLTFLoader().setPath( './models/' );
+						loader.load( 'BUREAU.gltf', function ( gltf ) {
+							
+							gltf.scene.traverse( function( object ) {
+
+							if ( object.isMesh) objects.push( object );
+
+							} );
+
+							scene.add( gltf.scene );
+							
+							
+						});
+						//MEUBLE
+						const loader3 = new GLTFLoader().setPath( './models/' );
+						loader.load( 'MEUBLE.gltf', function ( gltf ) {
+
+							gltf.scene.traverse( function( object ) {
+
+							if ( object.isMesh) objects.push( object );
+
+							} );
+
+							scene.add( gltf.scene );
+							
+							
+						});
+
+
+						} );
+
+
+
+
+
+
+
+    
+    
+    var gridHelper = new THREE.GridHelper( 10, 10 );
+		scene.add( gridHelper );	
+
+    renderer = new THREE.WebGLRenderer( { antialias: true } );
+	renderer.setPixelRatio( window.devicePixelRatio );
+    renderer.setSize( window.innerWidth, window.innerHeight );
+	renderer.toneMapping = THREE.ACESFilmicToneMapping;
+				renderer.toneMappingExposure = 1;
+				renderer.outputEncoding = THREE.sRGBEncoding;
+    document.body.appendChild( renderer.domElement );
+
+    //Controller
+		const orbitControls = new OrbitControls( camera, renderer.domElement );
+		
+		const dragControls = new DragControls( objects, camera, renderer.domElement );
+		
+		dragControls.addEventListener( 'dragstart', function () { orbitControls.enabled = false; } );
+		
+
+		
+    	dragControls.addEventListener( 'drag', onDragEvent );
+
+		dragControls.addEventListener( 'dragend', function () { orbitControls.enabled = true; } );
+		
+		document.addEventListener( 'click', onClick );
+
+		document.addEventListener( 'mousemove', onMouseMove, false );
+
+
+		
+// Rotation des objets
+
+document.addEventListener("dblclick", onDocumentKeyDown, false);
+
+
+
+function onDocumentKeyDown(event) {
+	
+    var keyCode = event.which; 
+  
+		raycaster.setFromCamera( mouse, camera );
+		var intersects = raycaster.intersectObjects(objects,true);
+
+		if (  intersects.length > 0 ) {
+
+			 intersects[0].object.rotation.y += Math.PI / 2;;
+		
+   		 }
+		
+			
+
+   
+};
+
+
+
+
+
+
+
+
+}
+
+function onClick( event ) {
+
+event.preventDefault();
+
+raycaster.setFromCamera( mouse, camera );
+var intersects = raycaster.intersectObjects(objects,true);
+
+}		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function animate() {
+	
+    requestAnimationFrame( animate );
+    renderer.render( scene, camera );
+	
+}
+
+//Change la couleur de l'objet au passage de la souris
+var mouse = new THREE.Vector2();
+
+function onMouseMove(e) {
+	
+	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+	raycaster.setFromCamera( mouse, camera );
+	var intersects = raycaster.intersectObjects(objects,true);
+	
+	if ( intersects.length > 0 ) {
+
+if ( INTERSECTED != intersects[ 0 ].object ) {
+
+	if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+
+	INTERSECTED = intersects[ 0 ].object;
+	INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
+	INTERSECTED.material.emissive.setHex( 0xff0000 );
+
+}
+
+} else {
+
+if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+
+INTERSECTED = null;
+
+}
+
+}
+
+
+
+
+
+
+var raycaster = new THREE.Raycaster();
+var intersects = new THREE.Vector3();
+
+//Permet de garder l'objet sur l'axe X
+function onDragEvent(e) {
+
+	e.object.position.y = -0.5;
+}
+
+
+
+
+
+		</script>
+
+	</body>
+</html>
